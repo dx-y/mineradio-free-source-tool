@@ -1,0 +1,20 @@
+[
+  {
+    "url": "https://music-api.gdstudio.xyz",
+    "key": "gdstudio",
+    "priority": 1,
+    "note": "GD Studio 免费音乐 API - 主源（netease 播放地址稳定）"
+  },
+  {
+    "url": "https://88.lxmusic.xn--fiqs8s",
+    "key": "lxmusic",
+    "priority": 90,
+    "note": "LX Music 音源1（兜底）"
+  },
+  {
+    "url": "https://lxmusic.ikunshare.com",
+    "key": "lxmusic",
+    "priority": 91,
+    "note": "LX Music 音源2（兜底）"
+  }
+]

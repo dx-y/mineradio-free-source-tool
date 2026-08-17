@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>Mineradio 免费音源优化工具</title>
+<style>
+/* ===== 复刻 Mineradio 原版视觉（取自 index.css :root + 主界面实测）===== */
+:root {
+  --fc-bg: #08090B;
+  --fc-paper: #0E1014;
+  --fc-ink: #E8ECEF;
+  --fc-muted: #8A9099;
+  --fc-hair: #1A1D22;
+  --home-accent: #00f5d4;
+  --champagne: #f4d28a;
+  --danger: #ff5c5c;
+  --glass-bg: rgba(255,255,255,0.05);
+  --glass-border: rgba(255,255,255,0.10);
+  --glass-blur: 14px;
+  --radius: 12px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  font-family: "Microsoft YaHei UI", "PingFang SC", "Segoe UI", sans-serif;
+  color: var(--fc-ink);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* 深色渐变背景 + 点阵纹理（原软件主界面质感） */
+body {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(0,245,212,0.06), transparent 60%),
+    radial-gradient(900px 500px at 10% 110%, rgba(36,66,255,0.08), transparent 60%),
+    radial-gradient(rgba(140,170,255,0.10) 1px, transparent 1px),
+    linear-gradient(180deg, #000000 0%, #0a0a0c 100%);
+  background-size: auto, auto, 22px 22px, auto;
+}
+
+.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0 26px 0;
+}
+
+/* ===== 自定义标题栏（无边框窗口）===== */
+.titlebar {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  margin: 0 -26px;
+  padding: 0 10px 0 16px;
+  -webkit-app-region: drag;
+  user-select: none;
+}
+.titlebar .tb-title {
+  font-size: 12px;
+  color: var(--fc-muted);
+  letter-spacing: 0.5px;
+  flex: 1;
+}
+.titlebar .tb-controls { display: flex; -webkit-app-region: no-drag; }
+.tb-btn {
+  width: 42px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: transparent;
+  color: var(--fc-muted);
+  font-size: 12px; cursor: pointer;
+  border-radius: 6px;
+  transition: all .15s;
+  font-family: "Segoe MDL2 Assets", "Microsoft YaHei UI", sans-serif;
+}
+.tb-btn:hover { background: rgba(255,255,255,0.08); color: var(--fc-ink); }
+.tb-btn.tb-close:hover { background: #e81123; color: #fff; }
+
+/* ===== 顶部品牌区 ===== */
+.brand { padding: 2px 2px 0; }
+.stripe { display: flex; gap: 5px; margin-bottom: 12px; }
+.stripe i { width: 30px; height: 4px; border-radius: 2px; }
+.stripe i:nth-child(1) { background: var(--home-accent); box-shadow: 0 0 8px rgba(0,245,212,0.6); }
+.stripe i:nth-child(2) { background: #2442ff; }
+.stripe i:nth-child(3) { background: var(--champagne); }
+
+.brand h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+.brand h1 .mr { color: var(--home-accent); text-shadow: 0 0 14px rgba(0,245,212,0.45); }
+.brand h1 .sub { color: var(--fc-ink); }
+.brand p { color: var(--fc-muted); font-size: 11px; margin-top: 5px; letter-spacing: 0.3px; }
+
+/* ===== 毛玻璃卡片 ===== */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+}
+
+/* ===== 路径区（胶囊搜索栏风格）===== */
+.section { margin-top: 18px; }
+.section-label {
+  font-size: 11px; color: var(--fc-muted);
+  margin-bottom: 8px; letter-spacing: 0.5px;
+}
+.path-row { display: flex; gap: 10px; }
+.path-input {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 22px;
+  padding: 10px 18px;
+  color: var(--fc-ink);
+  font-size: 13px;
+  font-family: "Microsoft YaHei UI", sans-serif;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.path-input:focus {
+  border-color: rgba(0,245,212,0.55);
+  box-shadow: 0 0 0 3px rgba(0,245,212,0.12), 0 0 18px rgba(0,245,212,0.15);
+}
+.btn-ghost {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 22px;
+  padding: 0 22px;
+  color: var(--home-accent);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: "Microsoft YaHei UI", sans-serif;
+}
+.btn-ghost:hover {
+  background: rgba(0,245,212,0.12);
+  border-color: rgba(0,245,212,0.45);
+  box-shadow: 0 0 14px rgba(0,245,212,0.25);
+}
+
+/* ===== 状态卡片（软件/运行/插件/三方音源）===== */
+.status-card { margin-top: 18px; padding: 14px 18px; }
+.status-grid { display: flex; flex-direction: column; gap: 8px; }
+.st-row { display: flex; align-items: center; gap: 10px; }
+.st-row .st-label { font-size: 11px; color: var(--fc-muted); width: 64px; flex-shrink: 0; letter-spacing: 0.5px; }
+.st-row .st-value { font-size: 13px; font-weight: 700; }
+.st-row .st-value .st-sub { font-size: 11px; font-weight: 400; color: var(--fc-muted); margin-left: 8px; }
+
+/* ===== 使用说明卡片 ===== */
+.help-card { margin-top: 14px; padding: 0; overflow: hidden; }
+.help-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; cursor: pointer; user-select: none;
+}
+.help-head:hover { background: rgba(255,255,255,0.03); }
+.help-title { font-size: 12px; color: var(--fc-muted); letter-spacing: 0.5px; }
+.help-toggle { font-size: 11px; color: var(--home-accent); }
+.help-body { padding: 0 16px 12px; }
+.help-body ol { margin: 0; padding-left: 18px; }
+.help-body li { font-size: 12px; color: #9db8cf; line-height: 1.9; }
+.help-body li b { color: var(--home-accent); font-weight: 600; }
+.help-body .help-note {
+  margin-top: 8px; padding: 8px 10px;
+  background: rgba(244,210,138,0.06);
+  border: 1px solid rgba(244,210,138,0.20);
+  border-radius: 8px;
+  font-size: 11px; color: var(--champagne); line-height: 1.7;
+}
+
+/* ===== 按钮区 ===== */
+.actions { margin-top: 18px; display: flex; gap: 12px; }
+.btn {
+  flex: 1;
+  border: none;
+  border-radius: 12px;
+  padding: 13px 0;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: "Microsoft YaHei UI", sans-serif;
+  letter-spacing: 2px;
+}
+.btn-install {
+  background: linear-gradient(135deg, #00f5d4, #00c9b0);
+  color: #06201c;
+  box-shadow: 0 4px 20px rgba(0,245,212,0.30);
+}
+.btn-install:hover {
+  box-shadow: 0 0 24px rgba(0,245,212,0.55), 0 4px 20px rgba(0,245,212,0.35);
+  transform: translateY(-1px);
+}
+.btn-install:active { transform: scale(0.98); }
+.btn-uninstall {
+  background: rgba(255,92,92,0.08);
+  border: 1px solid rgba(255,92,92,0.35);
+  color: var(--danger);
+}
+.btn-uninstall:hover {
+  background: rgba(255,92,92,0.16);
+  box-shadow: 0 0 18px rgba(255,92,92,0.25);
+}
+.btn-uninstall:active { transform: scale(0.98); }
+
+/* ===== 日志区 ===== */
+.log-wrap { flex: 1; display: flex; flex-direction: column; margin-top: 18px; min-height: 0; }
+.log-panel {
+  flex: 1;
+  margin-top: 8px;
+  padding: 12px 14px;
+  overflow-y: auto;
+  font-family: "Consolas", "Cascadia Mono", monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #9db8cf;
+  user-select: text;
+}
+.log-panel::-webkit-scrollbar { width: 8px; }
+.log-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+.log-panel::-webkit-scrollbar-track { background: transparent; }
+.log-panel .ok { color: var(--home-accent); }
+.log-panel .err { color: var(--danger); }
+.log-panel .warn { color: var(--champagne); }
+
+/* ===== 底部状态条（仿播放条）===== */
+.footer {
+  margin-top: 14px;
+  padding: 10px 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.footer .f-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--home-accent); box-shadow: 0 0 8px var(--home-accent); }
+.footer .f-text { font-size: 11px; color: var(--fc-muted); flex: 1; }
+.footer .f-ver { font-size: 10px; color: rgba(255,255,255,0.25); }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- 自定义标题栏 -->
+  <div class="titlebar">
+    <span class="tb-title">Mineradio 免费音源优化工具</span>
+    <div class="tb-controls">
+      <button class="tb-btn" id="tbMin" title="最小化">&#xE921;</button>
+      <button class="tb-btn" id="tbMax" title="最大化">&#xE922;</button>
+      <button class="tb-btn tb-close" id="tbClose" title="关闭">&#xE8BB;</button>
+    </div>
+  </div>
+
+  <!-- 顶部品牌区 -->
+  <div class="brand">
+    <div class="stripe"><i></i><i></i><i></i></div>
+    <h1><span class="mr">Mineradio</span> <span class="sub">免费音源优化工具</span></h1>
+    <p>官方可播性实测 · 免费音源聚合 · LX 音源 · 一键完整优化</p>
+  </div>
+
+  <!-- 路径区 -->
+  <div class="section">
+    <div class="section-label">MINERADIO 安装目录</div>
+    <div class="path-row">
+      <input id="pathInput" class="path-input" spellcheck="false" />
+      <button id="btnBrowse" class="btn-ghost">浏览</button>
+    </div>
+  </div>
+
+  <!-- 状态卡片 -->
+  <div class="glass status-card">
+    <div class="status-grid">
+      <div class="st-row">
+        <span class="st-label">软件状态</span>
+        <span id="stApp" class="st-value">检测中...</span>
+      </div>
+      <div class="st-row">
+        <span class="st-label">运行状态</span>
+        <span id="stRun" class="st-value">检测中...</span>
+      </div>
+      <div class="st-row">
+        <span class="st-label">可播插件</span>
+        <span id="stPlugin" class="st-value">检测中...</span>
+      </div>
+      <div class="st-row">
+        <span class="st-label">三方音源</span>
+        <span id="stTp" class="st-value">检测中...</span>
+      </div>
+      <div class="st-row">
+        <span class="st-label">整体状态</span>
+        <span id="stOpt" class="st-value">检测中...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 按钮区 -->
+  <div class="actions">
+    <button id="btnInstall" class="btn btn-install">一键安装</button>
+    <button id="btnUninstall" class="btn btn-uninstall">一键卸载</button>
+  </div>
+
+  <!-- 使用说明 -->
+  <div class="glass help-card">
+    <div class="help-head" id="helpHead">
+      <span class="help-title">使用说明</span>
+      <span class="help-toggle" id="helpToggle">收起 ▾</span>
+    </div>
+    <div class="help-body" id="helpBody">
+      <ol>
+        <li>打开工具自动检测 Mineradio 安装位置与完整优化状态。</li>
+        <li>状态显示 <b>「优化已完成 · 完整状态」</b> 则无需任何操作，直接使用即可。</li>
+        <li>未优化时点击 <b>「一键安装」</b>，一次性部署官方可播插件 + 免费音源聚合 + LX 音源。</li>
+        <li>完成后重启 Mineradio，即达到当前完整优化状态。</li>
+        <li><b>「一键卸载」</b> 可完整恢复官方原样（含 server.js 等文件级回滚）。</li>
+      </ol>
+      <div class="help-note" id="thirdPartyNote">三方音源检测中...</div>
+    </div>
+  </div>
+
+  <!-- 日志区 -->
+  <div class="log-wrap">
+    <div class="section-label">运行日志</div>
+    <div id="logPanel" class="glass log-panel"></div>
+  </div>
+
+  <!-- 底部状态条 -->
+  <div class="footer">
+    <span class="f-dot"></span>
+    <span class="f-text">安装前自动备份 · 卸载一键恢复官方原样</span>
+    <span class="f-ver">v4.0 · WebView2</span>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const logPanel = $('logPanel');
+
+function log(msg, cls) {
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  logPanel.appendChild(line);
+  logPanel.scrollTop = logPanel.scrollHeight;
+}
+
+const STATUS_COLORS = {
+  installed: '#00f5d4',
+  not_installed: '#f4d28a',
+  partial: '#ffb74d',
+  not_found: '#ff5c5c'
+};
+
+function setStatus(r) {
+  // 软件状态
+  const appEl = $('stApp');
+  if (r.app_installed) {
+    appEl.textContent = '已安装';
+    appEl.style.color = '#00f5d4';
+  } else {
+    appEl.textContent = '未安装';
+    appEl.style.color = '#ff5c5c';
+  }
+  // 运行状态
+  const runEl = $('stRun');
+  if (r.app_running) {
+    runEl.textContent = '运行中';
+    runEl.style.color = '#00f5d4';
+  } else {
+    runEl.textContent = '未运行';
+    runEl.style.color = '#f4d28a';
+  }
+  // 可播插件
+  const pluginEl = $('stPlugin');
+  const pmap = { installed: '已安装', not_installed: '未安装', partial: '部分安装', unknown: '未知' };
+  pluginEl.textContent = pmap[r.plugin] || '未知';
+  pluginEl.style.color = STATUS_COLORS[r.plugin] || '#f4d28a';
+  // 三方音源
+  const tpEl = $('stTp');
+  const tmap = { installed: '已部署', not_installed: '未部署', partial: '部分部署', unknown: '未知' };
+  tpEl.textContent = tmap[r.third_party] || '未知';
+  tpEl.style.color = STATUS_COLORS[r.third_party] || '#f4d28a';
+  // 整体状态
+  const optEl = $('stOpt');
+  optEl.textContent = r.text;
+  optEl.style.color = STATUS_COLORS[r.status] || '#f4d28a';
+}
+
+async function refreshStatus() {
+  const dir = $('pathInput').value.trim();
+  try {
+    const r = await window.pywebview.api.detect_status(dir);
+    setStatus(r);
+  } catch (e) {
+    setStatus({ status: 'not_found', text: '检测失败: ' + e, app_installed: false, app_running: false, plugin: 'unknown', third_party: 'unknown' });
+  }
+}
+
+$('btnBrowse').addEventListener('click', async () => {
+  try {
+    const dirs = await window.pywebview.api.browse_dir();
+    if (dirs && dirs.length) {
+      $('pathInput').value = dirs[0];
+      refreshStatus();
+    }
+  } catch (e) { log('浏览目录失败: ' + e, 'err'); }
+});
+
+$('btnInstall').addEventListener('click', async () => {
+  const dir = $('pathInput').value.trim();
+  log('==== 开始一键安装（完整优化）====');
+  log('目标目录: ' + dir);
+  const r = await window.pywebview.api.install(dir);
+  r.logs.forEach(l => log(l.msg, l.cls));
+  refreshStatus();
+  if (r.ok) log('安装完成！请重启 Mineradio 使完整优化生效。', 'ok');
+  else log('安装未完成，请查看日志。', 'err');
+});
+
+$('btnUninstall').addEventListener('click', async () => {
+  const dir = $('pathInput').value.trim();
+  log('==== 开始一键卸载（恢复官方原样）====');
+  log('目标目录: ' + dir);
+  const r = await window.pywebview.api.uninstall(dir);
+  r.logs.forEach(l => log(l.msg, l.cls));
+  refreshStatus();
+  if (r.ok) log('卸载完成！Mineradio 已恢复官方原样。', 'ok');
+  else log('卸载未完成，请查看日志。', 'err');
+});
+
+$('pathInput').addEventListener('change', refreshStatus);
+
+// 标题栏窗口控制
+$('tbMin').addEventListener('click', () => window.pywebview.api.minimize());
+$('tbMax').addEventListener('click', () => window.pywebview.api.toggle_maximize());
+$('tbClose').addEventListener('click', () => window.pywebview.api.close());
+
+// 使用说明折叠
+$('helpHead').addEventListener('click', () => {
+  const body = $('helpBody');
+  const toggle = $('helpToggle');
+  if (body.style.display === 'none') {
+    body.style.display = '';
+    toggle.textContent = '收起 ▾';
+  } else {
+    body.style.display = 'none';
+    toggle.textContent = '展开 ▸';
+  }
+});
+
+window.addEventListener('pywebviewready', async () => {
+  try {
+    const def = await window.pywebview.api.get_default_dir();
+    if (def) $('pathInput').value = def;
+  } catch (e) {}
+  // 自动检测 Mineradio 安装位置
+  try {
+    const dirs = await window.pywebview.api.find_mineradio_dir();
+    if (dirs && dirs.length) {
+      $('pathInput').value = dirs[0];
+      log('自动检测到 Mineradio 安装位置: ' + dirs[0], 'ok');
+      if (dirs.length > 1) log('另检测到候选位置: ' + dirs.slice(1).join(' | '), 'warn');
+    } else {
+      log('未自动检测到 Mineradio，请手动选择安装目录', 'warn');
+    }
+  } catch (e) {
+    log('自动检测安装位置失败: ' + e, 'err');
+  }
+  refreshStatus();
+  // 三方音源说明
+  try {
+    const tp = await window.pywebview.api.detect_third_party($('pathInput').value.trim());
+    $('thirdPartyNote').textContent = '三方音源（免费音源聚合 / LX 音源）：' + tp.text + '。已纳入本工具一键安装/卸载闭环。';
+  } catch (e) {
+    $('thirdPartyNote').textContent = '三方音源状态检测失败。';
+  }
+  log('界面已就绪 · 渲染内核 WebView2', 'ok');
+});
+</script>
+</body>
+</html>
