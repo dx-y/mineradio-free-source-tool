@@ -17,6 +17,8 @@
 
 配套提供 **WebView2 玻璃拟态 GUI 工具**（`MineradioTool_v4.exe`），自动检测安装位置与优化状态，一键完成安装 / 卸载。
 
+![工具主界面](assets/screenshot.png)
+
 ---
 
 ## 优化总览
