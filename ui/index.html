@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<title>Mineradio 免费音源优化工具</title>
+<title>Mineradio 优化工具</title>
 <style>
 /* ===== 复刻 Mineradio 原版视觉（取自 index.css :root + 主界面实测）===== */
 :root {
@@ -48,15 +48,22 @@ body {
   padding: 0 26px 0;
 }
 
-/* ===== 自定义标题栏（无边框窗口）===== */
+/* ===== 自定义标题栏（无边框窗口 · JS 拖拽）===== */
 .titlebar {
   display: flex;
   align-items: center;
   height: 40px;
   margin: 0 -26px;
   padding: 0 10px 0 16px;
-  -webkit-app-region: drag;
+  cursor: default;
   user-select: none;
+}
+.titlebar .tb-logo {
+  width: 18px; height: 18px;
+  margin-right: 8px;
+  flex-shrink: 0;
+  color: var(--home-accent);
+  filter: drop-shadow(0 0 6px rgba(0,245,212,0.6));
 }
 .titlebar .tb-title {
   font-size: 12px;
@@ -64,7 +71,7 @@ body {
   letter-spacing: 0.5px;
   flex: 1;
 }
-.titlebar .tb-controls { display: flex; -webkit-app-region: no-drag; }
+.titlebar .tb-controls { display: flex; }
 .tb-btn {
   width: 42px; height: 30px;
   display: flex; align-items: center; justify-content: center;
@@ -78,6 +85,17 @@ body {
 .tb-btn:hover { background: rgba(255,255,255,0.08); color: var(--fc-ink); }
 .tb-btn.tb-close:hover { background: #e81123; color: #fff; }
 
+/* ===== 窗口边缘缩放手柄 ===== */
+.resize-handle { position: fixed; z-index: 9999; }
+.rh-n  { top: 0; left: 14px; right: 14px; height: 6px; cursor: n-resize; }
+.rh-s  { bottom: 0; left: 14px; right: 14px; height: 6px; cursor: s-resize; }
+.rh-e  { right: 0; top: 14px; bottom: 14px; width: 6px; cursor: e-resize; }
+.rh-w  { left: 0; top: 14px; bottom: 14px; width: 6px; cursor: w-resize; }
+.rh-ne { top: 0; right: 0; width: 14px; height: 14px; cursor: ne-resize; }
+.rh-nw { top: 0; left: 0; width: 14px; height: 14px; cursor: nw-resize; }
+.rh-se { bottom: 0; right: 0; width: 14px; height: 14px; cursor: se-resize; }
+.rh-sw { bottom: 0; left: 0; width: 14px; height: 14px; cursor: sw-resize; }
+
 /* ===== 顶部品牌区 ===== */
 .brand { padding: 2px 2px 0; }
 .stripe { display: flex; gap: 5px; margin-bottom: 12px; }
@@ -86,7 +104,12 @@ body {
 .stripe i:nth-child(2) { background: #2442ff; }
 .stripe i:nth-child(3) { background: var(--champagne); }
 
-.brand h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+.brand h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px; }
+.brand h1 .logo {
+  width: 28px; height: 28px;
+  color: var(--home-accent);
+  filter: drop-shadow(0 0 10px rgba(0,245,212,0.55));
+}
 .brand h1 .mr { color: var(--home-accent); text-shadow: 0 0 14px rgba(0,245,212,0.45); }
 .brand h1 .sub { color: var(--fc-ink); }
 .brand p { color: var(--fc-muted); font-size: 11px; margin-top: 5px; letter-spacing: 0.3px; }
@@ -141,24 +164,32 @@ body {
   box-shadow: 0 0 14px rgba(0,245,212,0.25);
 }
 
-/* ===== 状态卡片（软件/运行/插件/三方音源）===== */
+/* ===== 状态卡片 ===== */
 .status-card { margin-top: 18px; padding: 14px 18px; }
-.status-grid { display: flex; flex-direction: column; gap: 8px; }
-.st-row { display: flex; align-items: center; gap: 10px; }
-.st-row .st-label { font-size: 11px; color: var(--fc-muted); width: 64px; flex-shrink: 0; letter-spacing: 0.5px; }
+.status-grid { display: flex; flex-direction: column; gap: 9px; }
+.st-row { display: flex; align-items: center; gap: 9px; }
+.st-row .st-dot { width: 8px; height: 8px; border-radius: 50%; background: #3a3f46; flex-shrink: 0; transition: all .3s; }
+.st-row .st-dot.on  { box-shadow: 0 0 8px currentColor; }
+.st-row .st-label { font-size: 11px; color: var(--fc-muted); width: 58px; flex-shrink: 0; letter-spacing: 0.5px; }
 .st-row .st-value { font-size: 13px; font-weight: 700; }
-.st-row .st-value .st-sub { font-size: 11px; font-weight: 400; color: var(--fc-muted); margin-left: 8px; }
 
 /* ===== 使用说明卡片 ===== */
-.help-card { margin-top: 14px; padding: 0; overflow: hidden; }
+.help-card { margin-top: 14px; padding: 0; overflow: hidden; flex-shrink: 0; }
 .help-head {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 16px; cursor: pointer; user-select: none;
 }
 .help-head:hover { background: rgba(255,255,255,0.03); }
-.help-title { font-size: 12px; color: var(--fc-muted); letter-spacing: 0.5px; }
+.help-title { font-size: 12px; color: var(--fc-muted); letter-spacing: 0.5px; display: flex; align-items: center; gap: 7px; }
+.help-title .h-icon { width: 13px; height: 13px; color: var(--home-accent); }
 .help-toggle { font-size: 11px; color: var(--home-accent); }
-.help-body { padding: 0 16px 12px; }
+.help-body {
+  padding: 0 16px 12px;
+  max-height: 32vh;
+  overflow-y: auto;
+}
+.help-body::-webkit-scrollbar { width: 6px; }
+.help-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
 .help-body ol { margin: 0; padding-left: 18px; }
 .help-body li { font-size: 12px; color: #9db8cf; line-height: 1.9; }
 .help-body li b { color: var(--home-accent); font-weight: 600; }
@@ -183,12 +214,15 @@ body {
   transition: all .2s;
   font-family: "Microsoft YaHei UI", sans-serif;
   letter-spacing: 2px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
 }
+.btn svg { width: 16px; height: 16px; }
 .btn-install {
   background: linear-gradient(135deg, #00f5d4, #00c9b0);
   color: #06201c;
   box-shadow: 0 4px 20px rgba(0,245,212,0.30);
 }
+.btn-install svg { color: #06201c; }
 .btn-install:hover {
   box-shadow: 0 0 24px rgba(0,245,212,0.55), 0 4px 20px rgba(0,245,212,0.35);
   transform: translateY(-1px);
@@ -241,9 +275,10 @@ body {
 </head>
 <body>
 <div class="app">
-  <!-- 自定义标题栏 -->
-  <div class="titlebar">
-    <span class="tb-title">Mineradio 免费音源优化工具</span>
+  <!-- 自定义标题栏（JS 拖拽移动） -->
+  <div class="titlebar" id="titlebar">
+    <svg class="tb-logo" viewBox="0 0 24 24" fill="currentColor"><path d="M9 18.5a3 3 0 1 1-2-2.83V5.6a1 1 0 0 1 .76-.97l9-2.25A1 1 0 0 1 18 3.35v10.32a3 3 0 1 1-2-2.83V6.35l-7 1.75v10.4z"/></svg>
+    <span class="tb-title">Mineradio 优化工具</span>
     <div class="tb-controls">
       <button class="tb-btn" id="tbMin" title="最小化">&#xE921;</button>
       <button class="tb-btn" id="tbMax" title="最大化">&#xE922;</button>
@@ -251,11 +286,24 @@ body {
     </div>
   </div>
 
+  <!-- 窗口边缘缩放手柄 -->
+  <div class="resize-handle rh-n"  data-dir="n"></div>
+  <div class="resize-handle rh-s"  data-dir="s"></div>
+  <div class="resize-handle rh-e"  data-dir="e"></div>
+  <div class="resize-handle rh-w"  data-dir="w"></div>
+  <div class="resize-handle rh-ne" data-dir="ne"></div>
+  <div class="resize-handle rh-nw" data-dir="nw"></div>
+  <div class="resize-handle rh-se" data-dir="se"></div>
+  <div class="resize-handle rh-sw" data-dir="sw"></div>
+
   <!-- 顶部品牌区 -->
   <div class="brand">
     <div class="stripe"><i></i><i></i><i></i></div>
-    <h1><span class="mr">Mineradio</span> <span class="sub">免费音源优化工具</span></h1>
-    <p>官方可播性实测 · 免费音源聚合 · LX 音源 · 一键完整优化</p>
+    <h1>
+      <svg class="logo" viewBox="0 0 24 24" fill="currentColor"><path d="M9 18.5a3 3 0 1 1-2-2.83V5.6a1 1 0 0 1 .76-.97l9-2.25A1 1 0 0 1 18 3.35v10.32a3 3 0 1 1-2-2.83V6.35l-7 1.75v10.4z"/></svg>
+      <span><span class="mr">Mineradio</span> <span class="sub">优化工具</span></span>
+    </h1>
+    <p>官方可播性优化 · 一键部署 · 完整可回滚</p>
   </div>
 
   <!-- 路径区 -->
@@ -271,22 +319,27 @@ body {
   <div class="glass status-card">
     <div class="status-grid">
       <div class="st-row">
+        <span id="dotApp" class="st-dot"></span>
         <span class="st-label">软件状态</span>
         <span id="stApp" class="st-value">检测中...</span>
       </div>
       <div class="st-row">
+        <span id="dotRun" class="st-dot"></span>
         <span class="st-label">运行状态</span>
         <span id="stRun" class="st-value">检测中...</span>
       </div>
       <div class="st-row">
-        <span class="st-label">可播插件</span>
+        <span id="dotPlugin" class="st-dot"></span>
+        <span class="st-label">可播优化</span>
         <span id="stPlugin" class="st-value">检测中...</span>
       </div>
       <div class="st-row">
-        <span class="st-label">三方音源</span>
-        <span id="stTp" class="st-value">检测中...</span>
+        <span id="dotBoost" class="st-dot"></span>
+        <span class="st-label">音源增强</span>
+        <span id="stBoost" class="st-value">检测中...</span>
       </div>
       <div class="st-row">
+        <span id="dotOpt" class="st-dot"></span>
         <span class="st-label">整体状态</span>
         <span id="stOpt" class="st-value">检测中...</span>
       </div>
@@ -295,25 +348,34 @@ body {
 
   <!-- 按钮区 -->
   <div class="actions">
-    <button id="btnInstall" class="btn btn-install">一键安装</button>
-    <button id="btnUninstall" class="btn btn-uninstall">一键卸载</button>
+    <button id="btnInstall" class="btn btn-install">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 20h14a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2zm7-18a1 1 0 0 1 1 1v8.586l3.293-3.293a1 1 0 1 1 1.414 1.414l-5 5a1 1 0 0 1-1.414 0l-5-5a1 1 0 0 1 1.414-1.414L11 11.586V3a1 1 0 0 1 1-1z"/></svg>
+      一键安装
+    </button>
+    <button id="btnUninstall" class="btn btn-uninstall">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+      一键卸载
+    </button>
   </div>
 
   <!-- 使用说明 -->
   <div class="glass help-card">
     <div class="help-head" id="helpHead">
-      <span class="help-title">使用说明</span>
+      <span class="help-title">
+        <svg class="h-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 5a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm-1 4h1v6h-1a1 1 0 1 0 0 2h2a1 1 0 0 0 1-1v-8h-2a1 1 0 1 0 0 2z"/></svg>
+        使用说明
+      </span>
       <span class="help-toggle" id="helpToggle">收起 ▾</span>
     </div>
     <div class="help-body" id="helpBody">
       <ol>
         <li>打开工具自动检测 Mineradio 安装位置与完整优化状态。</li>
         <li>状态显示 <b>「优化已完成 · 完整状态」</b> 则无需任何操作，直接使用即可。</li>
-        <li>未优化时点击 <b>「一键安装」</b>，一次性部署官方可播插件 + 免费音源聚合 + LX 音源。</li>
-        <li>完成后重启 Mineradio，即达到当前完整优化状态。</li>
-        <li><b>「一键卸载」</b> 可完整恢复官方原样（含 server.js 等文件级回滚）。</li>
+        <li>未优化时点击 <b>「一键安装」</b>，一键部署完整优化方案。</li>
+        <li>完成后重启 Mineradio，即可享受优化后的流畅体验。</li>
+        <li><b>「一键卸载」</b> 可完整恢复官方原样（含文件级回滚）。</li>
       </ol>
-      <div class="help-note" id="thirdPartyNote">三方音源检测中...</div>
+      <div class="help-note" id="enhanceNote">音源增强组件检测中...</div>
     </div>
   </div>
 
@@ -327,7 +389,7 @@ body {
   <div class="footer">
     <span class="f-dot"></span>
     <span class="f-text">安装前自动备份 · 卸载一键恢复官方原样</span>
-    <span class="f-ver">v4.0 · WebView2</span>
+    <span class="f-ver">v4.1 · WebView2</span>
   </div>
 </div>
 
@@ -336,11 +398,78 @@ const $ = id => document.getElementById(id);
 const logPanel = $('logPanel');
 
 function log(msg, cls) {
+  if (typeof logPanel === 'undefined' || !logPanel) return;
   const line = document.createElement('div');
   if (cls) line.className = cls;
   line.textContent = msg;
   logPanel.appendChild(line);
   logPanel.scrollTop = logPanel.scrollHeight;
+}
+
+/* ===== 窗口拖拽（标题栏移动） ===== */
+const titlebar = $('titlebar');
+let dragState = null;
+titlebar.addEventListener('pointerdown', async (e) => {
+  if (e.target.closest('.tb-controls')) return;
+  e.preventDefault();
+  try {
+    const st = await window.pywebview.api.get_window_state();
+    dragState = { startX: e.screenX, startY: e.screenY, winX: st.x, winY: st.y };
+    titlebar.setPointerCapture(e.pointerId);
+  } catch (err) { /* 未就绪忽略 */ }
+});
+titlebar.addEventListener('pointermove', (e) => {
+  if (!dragState) return;
+  const dx = e.screenX - dragState.startX;
+  const dy = e.screenY - dragState.startY;
+  window.pywebview.api.move_to(Math.round(dragState.winX + dx), Math.round(dragState.winY + dy));
+});
+const endDrag = () => { dragState = null; };
+titlebar.addEventListener('pointerup', endDrag);
+titlebar.addEventListener('pointercancel', endDrag);
+
+/* ===== 窗口缩放（边缘手柄） ===== */
+const MIN_W = 620, MIN_H = 600;
+let rsState = null;
+document.querySelectorAll('.resize-handle').forEach(h => {
+  h.addEventListener('pointerdown', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      rsState = {
+        dir: h.dataset.dir,
+        startX: e.screenX,
+        startY: e.screenY,
+        winW: window.innerWidth,
+        winH: window.innerHeight
+      };
+      h.setPointerCapture(e.pointerId);
+    } catch (err) { rsState = null; }
+  });
+  h.addEventListener('pointermove', (e) => {
+    if (!rsState || rsState.dir !== h.dataset.dir) return;
+    const dx = e.screenX - rsState.startX;
+    const dy = e.screenY - rsState.startY;
+    let newW = rsState.winW, newH = rsState.winH;
+    const d = rsState.dir;
+    if (d.includes('e')) newW = rsState.winW + dx;
+    if (d.includes('s')) newH = rsState.winH + dy;
+    if (d.includes('w')) newW = rsState.winW - dx;
+    if (d.includes('n')) newH = rsState.winH - dy;
+    newW = Math.max(MIN_W, newW);
+    newH = Math.max(MIN_H, newH);
+    window.pywebview.api.resize_to(Math.round(newW), Math.round(newH), d);
+  });
+  const endRs = () => { rsState = null; };
+  h.addEventListener('pointerup', endRs);
+  h.addEventListener('pointercancel', endRs);
+});
+
+/* ===== 状态渲染 ===== */
+function setDot(el, color) {
+  el.style.color = color;
+  el.style.background = color;
+  el.classList.add('on');
 }
 
 const STATUS_COLORS = {
@@ -353,36 +482,29 @@ const STATUS_COLORS = {
 function setStatus(r) {
   // 软件状态
   const appEl = $('stApp');
-  if (r.app_installed) {
-    appEl.textContent = '已安装';
-    appEl.style.color = '#00f5d4';
-  } else {
-    appEl.textContent = '未安装';
-    appEl.style.color = '#ff5c5c';
-  }
+  if (r.app_installed) { appEl.textContent = '已安装'; appEl.style.color = '#00f5d4'; setDot($('dotApp'), '#00f5d4'); }
+  else { appEl.textContent = '未安装'; appEl.style.color = '#ff5c5c'; setDot($('dotApp'), '#ff5c5c'); }
   // 运行状态
   const runEl = $('stRun');
-  if (r.app_running) {
-    runEl.textContent = '运行中';
-    runEl.style.color = '#00f5d4';
-  } else {
-    runEl.textContent = '未运行';
-    runEl.style.color = '#f4d28a';
-  }
-  // 可播插件
+  if (r.app_running) { runEl.textContent = '运行中'; runEl.style.color = '#00f5d4'; setDot($('dotRun'), '#00f5d4'); }
+  else { runEl.textContent = '未运行'; runEl.style.color = '#f4d28a'; setDot($('dotRun'), '#f4d28a'); }
+  // 可播优化
   const pluginEl = $('stPlugin');
   const pmap = { installed: '已安装', not_installed: '未安装', partial: '部分安装', unknown: '未知' };
   pluginEl.textContent = pmap[r.plugin] || '未知';
   pluginEl.style.color = STATUS_COLORS[r.plugin] || '#f4d28a';
-  // 三方音源
-  const tpEl = $('stTp');
+  setDot($('dotPlugin'), STATUS_COLORS[r.plugin] || '#f4d28a');
+  // 音源增强
+  const boostEl = $('stBoost');
   const tmap = { installed: '已部署', not_installed: '未部署', partial: '部分部署', unknown: '未知' };
-  tpEl.textContent = tmap[r.third_party] || '未知';
-  tpEl.style.color = STATUS_COLORS[r.third_party] || '#f4d28a';
+  boostEl.textContent = tmap[r.third_party] || '未知';
+  boostEl.style.color = STATUS_COLORS[r.third_party] || '#f4d28a';
+  setDot($('dotBoost'), STATUS_COLORS[r.third_party] || '#f4d28a');
   // 整体状态
   const optEl = $('stOpt');
   optEl.textContent = r.text;
   optEl.style.color = STATUS_COLORS[r.status] || '#f4d28a';
+  setDot($('dotOpt'), STATUS_COLORS[r.status] || '#f4d28a');
 }
 
 async function refreshStatus() {
@@ -447,7 +569,15 @@ $('helpHead').addEventListener('click', () => {
   }
 });
 
-window.addEventListener('pywebviewready', async () => {
+window.addEventListener('pywebviewready', init);
+// 轮询兜底：即使 pywebviewready 事件丢失，也能在 API 就绪后初始化
+let _initDone = false;
+function init() {
+  if (_initDone) return;
+  _initDone = true;
+  window.__initDone = true;
+  try { log('pywebview API 已就绪', 'ok'); } catch (e) {}
+  (async () => {
   try {
     const def = await window.pywebview.api.get_default_dir();
     if (def) $('pathInput').value = def;
@@ -466,15 +596,21 @@ window.addEventListener('pywebviewready', async () => {
     log('自动检测安装位置失败: ' + e, 'err');
   }
   refreshStatus();
-  // 三方音源说明
+  // 音源增强说明
   try {
     const tp = await window.pywebview.api.detect_third_party($('pathInput').value.trim());
-    $('thirdPartyNote').textContent = '三方音源（免费音源聚合 / LX 音源）：' + tp.text + '。已纳入本工具一键安装/卸载闭环。';
+    $('enhanceNote').textContent = '音源增强组件：' + tp.text + '。已纳入本工具一键安装/卸载闭环，运行状态稳定。';
   } catch (e) {
-    $('thirdPartyNote').textContent = '三方音源状态检测失败。';
+    $('enhanceNote').textContent = '音源增强组件状态检测失败。';
   }
   log('界面已就绪 · 渲染内核 WebView2', 'ok');
-});
+  })();
+}
+// 启动轮询兜底
+(function poll() {
+  if (window.pywebview && window.pywebview.api && !_initDone) init();
+  else if (!_initDone) setTimeout(poll, 200);
+})();
 </script>
 </body>
 </html>

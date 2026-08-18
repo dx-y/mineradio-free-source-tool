@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Mineradio 免费音源优化工具 v4.0
+Mineradio 优化工具 v4.1
 WebView2 渲染引擎 · 界面 100% 复刻 Mineradio 原版玻璃拟态
 （深色渐变 + 点阵纹理 + 毛玻璃卡片 + 青绿发光按钮）
 
-v4.0 核心升级：三方音源（免费音源聚合 / LX 音源 / 官方可播插件）全部纳入
-一键安装 / 一键卸载闭环，实现「下载原版 → 一键优化 → 重启 = 当前完整状态」。
+v4.1 增强：
+  ① 窗口交互做全：标题栏 JS 拖拽 + 四边四角缩放手柄（fix_point 缩放）
+  ② 界面图标补齐：标题栏 Logo / 状态指示点 / 按钮图标（内联 SVG）
+  ③ 使用说明卡片修复：展开内容超高时内部滚动，不再整体显示不全
+  ④ 界面文案低调化：聚焦软件优化介绍，敏感音源相关描述一笔带过
 
 优化内容（相对官方原版 v2.1.0）：
   ① 官方可播性实测插件  plugin-free-source-official-playable.js
@@ -23,6 +26,7 @@ import shutil
 import subprocess
 import time
 import webview
+from webview.window import FixPoint
 
 DEFAULT_MINERADIO_DIR = r"D:\VIAP软件迁移\应用\Mineradio"
 
@@ -161,7 +165,7 @@ def detect_status(mineradio_dir):
     if plugin_ok and third_party_ok:
         status, text = "installed", "优化已完成 · 完整状态"
     elif plugin_ok or third_party_ok:
-        status, text = "partial", "部分优化（插件或三方音源缺失）"
+        status, text = "partial", "部分优化（组件缺失）"
     else:
         status, text = "not_installed", "未优化（官方原版状态）"
 
@@ -299,6 +303,44 @@ class Api:
         if self._window:
             self._window.destroy()
 
+    # ===== 窗口拖拽缩放支持（v4.1）=====
+    _FIXPOINT_MAP = {
+        'nw': FixPoint.EAST | FixPoint.SOUTH,
+        'n':  FixPoint.SOUTH,
+        'ne': FixPoint.WEST | FixPoint.SOUTH,
+        'e':  FixPoint.WEST,
+        'se': FixPoint.NORTH | FixPoint.WEST,
+        's':  FixPoint.NORTH,
+        'sw': FixPoint.EAST | FixPoint.NORTH,
+        'w':  FixPoint.EAST,
+    }
+
+    def get_window_state(self):
+        """返回窗口当前位置/尺寸（逻辑像素，供 JS 拖拽/缩放计算）"""
+        try:
+            native = getattr(self._window, 'native', None)
+            if native is not None:
+                scale = getattr(native, '_scale', 1) or 1
+                return {
+                    "x": int(native.Location.X / scale),
+                    "y": int(native.Location.Y / scale),
+                    "width": int(native.Width / scale),
+                    "height": int(native.Height / scale),
+                }
+        except Exception:
+            pass
+        return {"x": 0, "y": 0, "width": 680, "height": 680}
+
+    def move_to(self, x, y):
+        if self._window:
+            self._window.move(x, y)
+
+    def resize_to(self, width, height, direction):
+        """按方向缩放窗口，direction: nw/n/ne/e/se/s/sw/w"""
+        if self._window:
+            fp = self._FIXPOINT_MAP.get(direction, FixPoint.NORTH | FixPoint.WEST)
+            self._window.resize(width, height, fp)
+
     def get_default_dir(self):
         return DEFAULT_MINERADIO_DIR
 
@@ -351,7 +393,7 @@ def main():
     index_html = os.path.join(base, "ui", "index.html")
     icon_path = os.path.join(base, "assets", "mineradio_tool.ico")
     window = webview.create_window(
-        "Mineradio 免费音源优化工具",
+        "Mineradio 优化工具",
         url=index_html,
         js_api=api,
         width=680,
