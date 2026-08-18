@@ -1,8 +1,7 @@
-
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(4, 0, 0, 0),
-    prodvers=(4, 0, 0, 0),
+    filevers=(4, 1, 0, 0),
+    prodvers=(4, 1, 0, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -15,13 +14,13 @@ VSVersionInfo(
       StringTable(
         u'080404b0',
         [StringStruct(u'CompanyName', u'Mineradio Community'),
-         StringStruct(u'FileDescription', u'Mineradio 免费音源优化工具'),
-         StringStruct(u'FileVersion', u'4.0.0.0'),
+         StringStruct(u'FileDescription', u'Mineradio 优化工具'),
+         StringStruct(u'FileVersion', u'4.1.0.0'),
          StringStruct(u'InternalName', u'MineradioTool'),
          StringStruct(u'LegalCopyright', u'Copyright (c) 2026 Mineradio Community'),
          StringStruct(u'OriginalFilename', u'MineradioTool_v4.exe'),
-         StringStruct(u'ProductName', u'Mineradio 免费音源优化工具'),
-         StringStruct(u'ProductVersion', u'4.0.0.0')])
+         StringStruct(u'ProductName', u'Mineradio 优化工具'),
+         StringStruct(u'ProductVersion', u'4.1.0.0')])
     ]),
     VarFileInfo([VarStruct(u'Translation', [2052, 1200])])
   ]
