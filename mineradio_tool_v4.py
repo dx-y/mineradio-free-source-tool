@@ -13,8 +13,8 @@ v4.1 增强：
 
 优化内容（相对官方原版 v2.1.0）：
   ① 官方可播性实测插件  plugin-free-source-official-playable.js
-  ② 免费音源聚合        free-source-api.js + free-source-servers.json
-  ③ LX 音源接入         lx-runner.js + lx-source-cache.js
+  ② 播放源扩展          free-source-api.js + free-source-servers.json
+  ③ 扩展音源接入        lx-runner.js + lx-source-cache.js
   ④ 预扫描/URL 预取     06-free-source-prefetch.js
   ⑤ server.js / 11-provider-fallback.js / index-loader.js 注入增强
 
@@ -38,7 +38,7 @@ INDEX_LOADER_REL = os.path.join("public", "js", "index-loader.js")
 HOOK_PATH = "js/modules/08-account/" + PLUGIN_NAME
 ANCHOR = "'js/modules/11-main-loop.js',"
 
-# 三方音源注入文件（相对 resources/app）
+# 扩展组件注入文件（相对 resources/app）
 THIRD_PARTY_FILES = [
     "free-source-api.js",
     "free-source-servers.json",
@@ -127,7 +127,7 @@ def _read_text(path):
 
 
 def detect_status(mineradio_dir):
-    """检测软件安装状态 + 完整优化状态（官方可播插件 + 三方音源）"""
+    """检测软件安装状态 + 完整优化状态"""
     exe = os.path.join(mineradio_dir, "Mineradio.exe")
     app_installed = os.path.isfile(exe)
     app_running = is_app_running() if app_installed else False
@@ -154,7 +154,7 @@ def detect_status(mineradio_dir):
     hooked = HOOK_PATH in _read_text(index_loader)
     plugin_ok = plugin_file and hooked
 
-    # ---- 三方音源检测 ----
+    # ---- 扩展组件检测 ----
     tp_files_ok = all(os.path.isfile(os.path.join(app_dir, f)) for f in THIRD_PARTY_FILES)
     server_ok = SERVER_MARK in _read_text(os.path.join(app_dir, "server.js"))
     fallback_ok = FALLBACK_MARK in _read_text(os.path.join(app_dir, REPLACE_FILES[1]))
@@ -178,7 +178,7 @@ def detect_status(mineradio_dir):
 
 
 def detect_third_party(mineradio_dir):
-    """检测三方音源部署明细（供 UI 展示）"""
+    """检测优化组件部署明细（供 UI 展示）"""
     app_dir = app_dir_of(mineradio_dir)
     present = [f for f in THIRD_PARTY_FILES if os.path.isfile(os.path.join(app_dir, f))]
     return {
@@ -202,7 +202,7 @@ def _backup_current(app_dir, logs):
 
 
 def _install(mineradio_dir):
-    """一键安装完整优化（官方可播插件 + 三方音源），返回 (ok, logs)"""
+    """一键安装完整优化，返回 (ok, logs)"""
     logs = []
     app_dir = app_dir_of(mineradio_dir)
     if not os.path.isdir(app_dir):
@@ -212,7 +212,7 @@ def _install(mineradio_dir):
     # 1. 备份当前文件
     _backup_current(app_dir, logs)
 
-    # 2. 复制三方音源注入文件
+    # 2. 复制扩展组件注入文件
     for rel in THIRD_PARTY_FILES:
         src = resource_path(os.path.join("files", os.path.basename(rel)))
         dst = os.path.join(app_dir, rel)
@@ -263,7 +263,7 @@ def _uninstall(mineradio_dir):
             logs.append({"msg": "错误：无可用恢复源 " + rel, "cls": "err"})
             return False, logs
 
-    # 2. 删除三方音源注入文件
+    # 2. 删除扩展组件注入文件
     for rel in THIRD_PARTY_FILES:
         dst = os.path.join(app_dir, rel)
         if os.path.isfile(dst):
